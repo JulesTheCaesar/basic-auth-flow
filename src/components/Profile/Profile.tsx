@@ -1,16 +1,18 @@
 import { useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { updateProfile, updateEmail, updatePassword } from 'firebase/auth';
 
-const Home = () => {
+const Profile = () => {
 	const { currentUser } = useAuth();
 	const navigate = useNavigate();
 
 	useEffect(() => {
+		console.log(currentUser);
 		if (!currentUser) navigate('/login');
 	}, [currentUser]);
 
-	return <div>Welcome</div>;
+	return <div>User Profile</div>;
 };
 
-export default Home;
+export default Profile;
