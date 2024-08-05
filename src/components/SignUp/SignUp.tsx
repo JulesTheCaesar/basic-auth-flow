@@ -1,25 +1,44 @@
 import '../Login/Login.scss';
-import { FormEvent, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase/firebase';
 import { Button, Container, Form } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { useAuth } from '../../contexts/AuthContext';
+
+interface SignUpFormData {
+	email: string;
+	password: string;
+}
 
 const SignUp = () => {
-	const [email, setEmail] = useState('');
-	const [password, setPassword] = useState('');
 	const [isSigningUp, setIsSigningUp] = useState(false);
-	const [errorMessage, setErrorMessage] = useState('');
-	// TODO
-	// const [confirmPassword, setconfirmPassword] = useState('');
+	const { currentUser } = useAuth();
+	const navigate = useNavigate();
 
-	const onSubmit = async (e: FormEvent) => {
-		e.preventDefault();
+	useEffect(() => {
+		if (currentUser) navigate('/home');
+	}, [currentUser]);
+
+	const {
+		register,
+		formState: { errors },
+		handleSubmit,
+	} = useForm({
+		mode: 'onTouched',
+		reValidateMode: 'onSubmit',
+		defaultValues: {
+			email: '',
+			password: '',
+		},
+	});
+
+	const onSubmit = (data: SignUpFormData) => {
 		if (isSigningUp) return;
-
 		setIsSigningUp(true);
 		try {
-			await createUserWithEmailAndPassword(auth, email, password);
+			createUserWithEmailAndPassword(auth, data.email, data.password);
 		} catch (error) {
 			console.error(error);
 		} finally {
@@ -34,27 +53,50 @@ const SignUp = () => {
 					<Form.Label>Email</Form.Label>
 					<Form.Control
 						type="email"
-						placeholder="email"
+						placeholder="Email"
 						autoComplete="email"
-						required
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
+						{...register('email', {
+							required: true,
+							pattern:
+								/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+						})}
 					/>
+					{errors.email?.type === 'required' && (
+						<Form.Text className="text-danger">
+							{errors.email.message}
+						</Form.Text>
+					)}
+					{errors.email?.type === 'pattern' && (
+						<Form.Text className="text-danger">
+							Invalid email address
+						</Form.Text>
+					)}
 				</Form.Group>
 				<Form.Group controlId="formPassword">
 					<Form.Label>Password</Form.Label>
 					<Form.Control
 						type="password"
-						placeholder="password"
+						placeholder="Password"
 						autoComplete="password"
-						required
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
+						{...register('password', {
+							required: true,
+							minLength: 6,
+						})}
 					/>
+					{errors.password?.type === 'required' && (
+						<Form.Text className="text-danger">
+							{errors.password.message}
+						</Form.Text>
+					)}
+					{errors.password?.type === 'minLength' && (
+						<Form.Text className="text-danger">
+							Password must be at least 6 characters
+						</Form.Text>
+					)}
 				</Form.Group>
 				<div className="form-actions">
 					<Button
-						onClick={onSubmit}
+						onClick={handleSubmit(onSubmit)}
 						type="submit"
 						disabled={isSigningUp}
 					>
