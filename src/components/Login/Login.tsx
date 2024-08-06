@@ -79,7 +79,8 @@ const Login = () => {
 						placeholder="Password"
 						autoComplete="password"
 						{...register('password', {
-							required: 'Password is required',
+							required: true,
+							minLength: 6,
 						})}
 					/>
 					{errors.password?.type === 'required' && (
